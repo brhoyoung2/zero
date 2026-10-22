@@ -866,8 +866,8 @@
     <a class="pbtn" id="btn-pro" href="https://tooning.io/tooning-price-plan?type=school" target="_blank" rel="noopener" style="--cy:7261.5">Pro 혜택 더 보기</a>
 
     <div class="btn-cover" aria-hidden="true" style="--x:843;--y:8378;--w:234;--h:80"></div>
-    <!-- data-href에 연결할 링크를 넣으면 동의 후 클릭 시 새 탭으로 열림 (현재 비어 있음) -->
-    <button type="button" class="pbtn" id="btn-quote-submit" data-href="" disabled aria-disabled="true" style="--cy:8417.5">견적 신청하기</button>
+    <!-- 클릭 시 Supabase 2round_상담신청 테이블에 저장 (아래 스크립트) -->
+    <button type="button" class="pbtn" id="btn-quote-submit" disabled aria-disabled="true" style="--cy:8417.5">견적 신청하기</button>
 
     <!-- 많은 수업에서 투닝이 함께하고 있습니다: 카운트업 숫자 -->
     <div class="stat" data-to="1690336" data-unit="명" style="--x:360;--y:2004;--w:360;--h:62"><span>1,690,336명</span></div>
@@ -937,6 +937,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script>
   (function () {
     // 히어로 '견적 신청하기' → 견적 문의 섹션으로 부드럽게 스크롤
@@ -1048,10 +1049,54 @@
     monthsVal.addEventListener('change', syncSubmit);
     agree.addEventListener('change', syncSubmit);
     syncSubmit();
-    submitBtn.addEventListener('click', function () {
+    // '견적 신청하기' → 2026second.tooning.io와 같은 Supabase 테이블에 저장 (기존 관리자 화면에서 확인)
+    // anon 키만 사용 — service_role 키는 절대 넣지 말 것
+    var SUPABASE_URL = 'https://mllbsqnrvhvnqvxkpxof.supabase.co';
+    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sbGJzcW5ydmh2bnF2eGtweG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyOTQ4MDUsImV4cCI6MjA5NTg3MDgwNX0.X4vB-JwtbrQOUg_It5dSuvTrIWOOFfg7ThIiU8FKhjI';
+    var CONSULT_TABLE = '2round_상담신청';
+    var SOURCE_TAG = '잔여예산 프로모션';   // 관리자 화면 '희망 에듀테크' 칸에 표시되어 신청 출처를 구분
+    var supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+    var val = function (id) { return document.getElementById(id).value.trim(); };
+    var resetForm = function () {
+      textIds.forEach(function (id) { document.getElementById(id).value = ''; });
+      monthsVal.value = '';
+      document.querySelector('#months-dd .dd-text').textContent = '선택해 주세요.';
+      document.querySelectorAll('#months-dd [role="option"]').forEach(function (li) { li.setAttribute('aria-selected', 'false'); });
+      agree.checked = false;
+      syncSubmit();
+    };
+    submitBtn.addEventListener('click', async function () {
       if (submitBtn.disabled) return;
-      var url = submitBtn.dataset.href;   // 링크 비워둠 — 정해지면 data-href에 입력
-      if (url) window.open(url, '_blank', 'noopener');
+      var count = val('f-count');
+      var payload = {
+        school: val('f-school'),
+        teacher: val('f-name'),
+        phone: val('f-phone'),
+        headcount: /^\d+$/.test(count) ? count + '명' : count,
+        months: monthsVal.value ? monthsVal.value + '개월' : '',
+        email: val('f-email'),
+        wanted_edutech: [SOURCE_TAG],
+        plus_purchase: false
+      };
+      submitBtn.disabled = true;
+      submitBtn.textContent = '신청 중...';
+      try {
+        if (!supabaseClient) throw new Error('Supabase 미연동');
+        var res = await supabaseClient.from(CONSULT_TABLE).insert([payload]);
+        // 선택 컬럼이 테이블에 없으면 기본 항목만으로 재시도 (2026second와 동일)
+        if (res.error && (res.error.code === 'PGRST204' || /column|schema cache/i.test(res.error.message || ''))) {
+          res = await supabaseClient.from(CONSULT_TABLE).insert([{ school: payload.school, teacher: payload.teacher, phone: payload.phone }]);
+        }
+        if (res.error) throw res.error;
+        alert('신청이 완료되었습니다! 담당자가 곧 연락드리겠습니다.');
+        resetForm();
+      } catch (err) {
+        console.error(err);
+        alert('전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      } finally {
+        submitBtn.textContent = '견적 신청하기';
+        syncSubmit();
+      }
     });
 
     // 개인정보 동의 모달: '보기'로 열고, X 또는 Esc로 닫기
