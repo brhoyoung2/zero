@@ -1108,7 +1108,7 @@
 
   <!-- ===== 관리자 인증 ===== -->
   <div class="modal" id="adminGate" aria-hidden="true">
-    <div class="modal__backdrop" data-gate-close></div>
+    <div class="modal__backdrop"></div>   <!-- 바깥 영역 클릭으로는 닫히지 않음 (X 버튼으로만 닫기) -->
     <div class="modal__panel modal__panel--narrow" role="dialog" aria-modal="true" aria-label="관리자 확인">
       <div class="modal__head">
         <h4 class="modal__title">관리자 확인</h4>
@@ -2235,7 +2235,6 @@
       });
       const closeGate = () => gate.classList.remove("open");
       gate.querySelectorAll("[data-gate-close]").forEach((el) => el.addEventListener("click", closeGate));
-      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeGate(); });
 
       // ---- 연락 완료 체크 (서버 저장 → 재접속·새로고침에도 유지) ----
       document.getElementById("adminTable").addEventListener("change", async (e) => {
