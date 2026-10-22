@@ -339,8 +339,8 @@
       font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       line-height: 1.6; word-break: keep-all; -webkit-font-smoothing: antialiased;
     }
-    #adminGate *, #adminView * { margin: 0; padding: 0; box-sizing: border-box; }
-    #adminView .wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; }
+    :where(#adminGate, #adminView) * { margin: 0; padding: 0; box-sizing: border-box; }   /* :where → 우선순위 0, 아래 관리자 스타일이 이김 */
+    :where(#adminView) .wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; }
     .modal { position: fixed; inset: 0; z-index: 2100; display: none; }
     .modal.open { display: block; }
     .modal__backdrop { position: absolute; inset: 0; background: rgba(26,23,48,0.5); backdrop-filter: blur(2px); }
