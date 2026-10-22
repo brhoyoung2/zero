@@ -310,7 +310,119 @@
     #site-footer .ft-info { margin-top: calc(var(--t) * 20); font-size: calc(var(--t) * 16); line-height: calc(var(--t) * 28); color: #454545; }
     #site-footer .ft-sep { display: inline-block; margin: 0 calc(var(--t) * 12); }
     #site-footer .ft-copy { margin-top: calc(var(--t) * 24); font-size: calc(var(--t) * 16); line-height: 1.5; color: #999999; }
+    /* ── 관리자 뷰 (2026second.tooning.io에서 복제 · .modal/.admin 범위 안에서만 적용) ── */
+    #adminGate, #adminView {
+      --violet: #5b4ef5; --violet-dark: #4438c9; --violet-soft: #eeebff;
+      --ink: #1a1730; --ink-soft: #5a5670; --red: #ff3b47; --line: #ece9fb; --maxw: 1120px;
+      font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      line-height: 1.6; word-break: keep-all; -webkit-font-smoothing: antialiased;
+    }
+    #adminGate *, #adminView * { margin: 0; padding: 0; box-sizing: border-box; }
+    #adminView .wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; }
+    .modal { position: fixed; inset: 0; z-index: 2100; display: none; }
+    .modal.open { display: block; }
+    .modal__backdrop { position: absolute; inset: 0; background: rgba(26,23,48,0.5); backdrop-filter: blur(2px); }
+    .modal__panel {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      width: min(640px, calc(100vw - 32px)); max-height: 88vh; overflow-y: auto;
+      background: #fff; border-radius: 22px; padding: 26px;
+      box-shadow: 0 30px 80px rgba(20,15,60,0.4);
+    }
+    .pick-note {
+      font-size: 13.5px; line-height: 1.65; color: var(--ink-soft);
+      background: #faf9ff; border: 1px solid var(--line);
+      border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;
+    }
+    .pick-note strong { color: var(--violet); }
+    .modal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .modal__title { font-size: 19px; font-weight: 800; color: var(--ink); }
+    .modal__close {
+      border: none; background: #f1eefc; color: var(--ink-soft);
+      width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 14px;
+    }
+    .modal__close:hover { background: var(--violet-soft); color: var(--violet); }
+    .modal__done {
+      margin-top: 20px; width: 100%;
+      background: var(--violet); color: #fff; font-size: 16px; font-weight: 800;
+      padding: 14px; border: none; border-radius: 14px; cursor: pointer;
+    }
+    .modal__done:hover { background: var(--violet-dark); }
+    .form-msg { margin-top: 14px; font-size: 14px; font-weight: 600; text-align: center; min-height: 20px; }
+    .form-msg.ok { color: #1aa36a; }
+    .form-msg.err { color: var(--red); }
+    .modal__panel--narrow { width: min(380px, calc(100vw - 32px)); }
+    .gate-input {
+      width: 100%; font-family: inherit; font-size: 30px; font-weight: 800;
+      letter-spacing: 0.5em; text-align: center; padding: 14px 16px 14px 30px;
+      border: 1.5px solid var(--line); border-radius: 14px; background: #faf9ff; color: var(--ink);
+    }
+    .gate-input:focus { outline: none; border-color: var(--violet); background: #fff; }
+    .admin {
+      position: fixed; inset: 0; z-index: 2000; display: none;
+      background: #f7f6fc; overflow-y: auto; color: var(--ink);
+    }
+    .admin.open { display: block; }
+    .admin__bar { position: sticky; top: 0; z-index: 3; background: #14122a; color: #fff; }
+    .admin__bar-in {
+      max-width: var(--maxw); margin: 0 auto; padding: 14px 24px;
+      display: flex; align-items: center; gap: 12px; font-size: 15px; flex-wrap: wrap;
+    }
+    .admin__count { font-size: 13px; font-weight: 700; color: #cfc7ff; background: rgba(255,255,255,0.1); padding: 4px 11px; border-radius: 999px; }
+    .admin__btn {
+      font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+      padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.1); color: #fff;
+    }
+    .admin__btn:hover { background: rgba(255,255,255,0.2); }
+    .admin__btn--x { background: #fff; color: #14122a; border-color: #fff; }
+    .admin__body { padding: 26px 24px 70px; display: flex; flex-direction: column; gap: 20px; }
+    .admin__panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; box-shadow: 0 4px 20px rgba(70,55,190,0.06); }
+    .admin__h { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
+    .admin__h span { font-size: 13px; font-weight: 500; color: var(--ink-soft); }
+    .admin__map { position: relative; display: flex; justify-content: center; }
+    .admin__map svg { width: 100%; max-width: 460px; height: auto; }
+    .admin__map path { stroke: #fff; stroke-width: 2.5; cursor: pointer; transition: opacity .12s ease; }
+    .admin__map path:hover { opacity: .78; }
+    .admin__map path.sel { stroke: var(--ink); stroke-width: 5; }
+    .admin__map text { font-family: inherit; font-weight: 800; pointer-events: none; text-anchor: middle; }
+    .admin__tip {
+      position: absolute; pointer-events: none; z-index: 4; display: none;
+      background: #14122a; color: #fff; font-size: 12.5px; font-weight: 600;
+      padding: 7px 11px; border-radius: 9px; white-space: nowrap; transform: translate(-50%, -140%);
+    }
+    .admin__legend { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+    .admin__legend i { width: 26px; height: 11px; border-radius: 3px; display: block; }
+    .admin__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .admin__chip {
+      font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+      padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--line);
+      background: #fff; color: var(--ink);
+    }
+    .admin__chip:hover { border-color: #ccc2ff; }
+    .admin__chip.on { background: var(--violet); border-color: var(--violet); color: #fff; }
+    .admin__chip b { color: var(--violet); }
+    .admin__chip.on b { color: #fff; }
+    .admin__tablewrap { overflow-x: auto; }
+    .admin__table { width: 100%; border-collapse: collapse; font-size: 13.5px; white-space: nowrap; }
+    .admin__table th, .admin__table td { padding: 11px 13px; border-bottom: 1px solid var(--line); text-align: left; }
+    .admin__table th { font-size: 12px; font-weight: 800; color: var(--ink-soft); background: #faf9ff; position: sticky; top: 0; }
+    .admin__table td.wrapcell { white-space: normal; min-width: 230px; }
+    .admin__table tbody tr:hover { background: #faf9ff; }
+    .admin__callcell { text-align: center; }
+    .admin__called { width: 19px; height: 19px; cursor: pointer; accent-color: #22a565; vertical-align: middle; }
+    .admin__table tbody tr.contacted { background: #f1fbf5; }
+    .admin__table tbody tr.contacted:hover { background: #e7f8ee; }
+    .admin__empty { padding: 34px; text-align: center; color: var(--ink-soft); font-weight: 600; }
+    .admin__yes { font-weight: 800; color: var(--violet); }
+    .admin__no { color: #b9b5c9; }
+    .admin__tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .admin__tag { font-size: 11.5px; font-weight: 700; color: var(--violet-dark); background: var(--violet-soft); padding: 3px 9px; border-radius: 999px; }
+    .admin__stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .admin__stat { flex: 1 1 200px; background: #faf9ff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+    .admin__stat b { display: block; font-size: 30px; font-weight: 800; color: var(--violet-dark); line-height: 1.2; }
+    .admin__stat span { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
   </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 
 <style id="responsive-style">
     /* AI 투닝 서비스 카드: 움직이는 이미지(APNG)로 교체 */
@@ -793,7 +905,7 @@
 
   <footer id="site-footer">
     <div class="ft-inner">
-      <p class="ft-name">(주) 툰스퀘어</p>
+      <p class="ft-name" id="brandTap">(주) 툰스퀘어</p>
       <p class="ft-info">
         <span>대표 : 이호영</span><span class="ft-sep" aria-hidden="true">|</span><span>사업자등록번호 : 879-88-01529</span><span class="ft-sep" aria-hidden="true">|</span><span>통신판매번호 : 2020-서울서초-0385호</span><br>
         서울시 서초구 양재대로 12길 56, AI캠퍼스 502호
@@ -866,7 +978,7 @@
     <a class="pbtn" id="btn-pro" href="https://tooning.io/tooning-price-plan?type=school" target="_blank" rel="noopener" style="--cy:7261.5">Pro 혜택 더 보기</a>
 
     <div class="btn-cover" aria-hidden="true" style="--x:843;--y:8378;--w:234;--h:80"></div>
-    <!-- 클릭 시 Supabase 2round_상담신청 테이블에 저장 (아래 스크립트) -->
+    <!-- 클릭 시 Supabase zero_상담신청 테이블에 저장 (아래 스크립트) -->
     <button type="button" class="pbtn" id="btn-quote-submit" disabled aria-disabled="true" style="--cy:8417.5">견적 신청하기</button>
 
     <!-- 많은 수업에서 투닝이 함께하고 있습니다: 카운트업 숫자 -->
@@ -937,7 +1049,55 @@
     </div>
   </div>
 
+  <!-- ===== 관리자 인증 ===== -->
+  <div class="modal" id="adminGate" aria-hidden="true">
+    <div class="modal__backdrop" data-gate-close></div>
+    <div class="modal__panel modal__panel--narrow" role="dialog" aria-modal="true" aria-label="관리자 확인">
+      <div class="modal__head">
+        <h4 class="modal__title">관리자 확인</h4>
+        <button type="button" class="modal__close" data-gate-close aria-label="닫기">✕</button>
+      </div>
+      <p class="pick-note">네 자리 비밀번호를 입력해 주세요.</p>
+      <input class="gate-input" id="gateInput" type="password" inputmode="numeric" maxlength="4" autocomplete="off" />
+      <p class="form-msg" id="gateMsg"></p>
+      <button type="button" class="modal__done" id="gateSubmit">확인</button>
+    </div>
+  </div>
+
+  <!-- ===== 관리자 뷰 ===== -->
+  <div class="admin" id="adminView" aria-hidden="true">
+    <header class="admin__bar">
+      <div class="admin__bar-in">
+        <strong>잔여 예산 프로모션 · 견적 신청 관리자 뷰</strong>
+        <span class="admin__count" id="adminCount">불러오는 중…</span>
+        <span style="flex:1"></span>
+        <button type="button" class="admin__btn" id="adminExcel">엑셀 다운로드 ⬇</button>
+        <button type="button" class="admin__btn" id="adminReload">새로고침</button>
+        <button type="button" class="admin__btn admin__btn--x" id="adminClose">닫기 ✕</button>
+      </div>
+    </header>
+    <div class="admin__body wrap">
+      <section class="admin__panel">
+        <h3 class="admin__h">📍 전국 접수 분포 <span>· 지역을 클릭하면 해당 지역 신청자만 표시됩니다</span></h3>
+        <div class="admin__map" id="adminMap"><div class="admin__tip" id="adminTip"></div></div>
+        <div class="admin__legend" id="adminLegend"></div>
+        <div class="admin__chips" id="adminChips"></div>
+      </section>
+      <section class="admin__panel">
+        <h3 class="admin__h">신청자 목록 <span id="adminNote"></span></h3>
+        <div class="admin__tablewrap"><table class="admin__table" id="adminTable"></table></div>
+      </section>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script>
+    // Supabase (anon 키만 사용 — service_role 키는 절대 넣지 말 것)
+    window.zeroSupabase = window.supabase ? window.supabase.createClient(
+      'https://mllbsqnrvhvnqvxkpxof.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sbGJzcW5ydmh2bnF2eGtweG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyOTQ4MDUsImV4cCI6MjA5NTg3MDgwNX0.X4vB-JwtbrQOUg_It5dSuvTrIWOOFfg7ThIiU8FKhjI'
+    ) : null;
+  </script>
   <script>
   (function () {
     // 히어로 '견적 신청하기' → 견적 문의 섹션으로 부드럽게 스크롤
@@ -1049,13 +1209,9 @@
     monthsVal.addEventListener('change', syncSubmit);
     agree.addEventListener('change', syncSubmit);
     syncSubmit();
-    // '견적 신청하기' → 2026second.tooning.io와 같은 Supabase 테이블에 저장 (기존 관리자 화면에서 확인)
-    // anon 키만 사용 — service_role 키는 절대 넣지 말 것
-    var SUPABASE_URL = 'https://mllbsqnrvhvnqvxkpxof.supabase.co';
-    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sbGJzcW5ydmh2bnF2eGtweG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyOTQ4MDUsImV4cCI6MjA5NTg3MDgwNX0.X4vB-JwtbrQOUg_It5dSuvTrIWOOFfg7ThIiU8FKhjI';
-    var CONSULT_TABLE = '2round_상담신청';
-    var SOURCE_TAG = '잔여예산 프로모션';   // 관리자 화면 '희망 에듀테크' 칸에 표시되어 신청 출처를 구분
-    var supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+    // '견적 신청하기' → 이 프로모션 전용 Supabase 테이블에 저장 (하단 '(주) 툰스퀘어' 5회 클릭 → 관리자 화면에서 확인)
+    var supabaseClient = window.zeroSupabase;
+    var CONSULT_TABLE = 'zero_상담신청';
     var val = function (id) { return document.getElementById(id).value.trim(); };
     var resetForm = function () {
       textIds.forEach(function (id) { document.getElementById(id).value = ''; });
@@ -1074,19 +1230,13 @@
         phone: val('f-phone'),
         headcount: /^\d+$/.test(count) ? count + '명' : count,
         months: monthsVal.value ? monthsVal.value + '개월' : '',
-        email: val('f-email'),
-        wanted_edutech: [SOURCE_TAG],
-        plus_purchase: false
+        email: val('f-email')
       };
       submitBtn.disabled = true;
       submitBtn.textContent = '신청 중...';
       try {
         if (!supabaseClient) throw new Error('Supabase 미연동');
         var res = await supabaseClient.from(CONSULT_TABLE).insert([payload]);
-        // 선택 컬럼이 테이블에 없으면 기본 항목만으로 재시도 (2026second와 동일)
-        if (res.error && (res.error.code === 'PGRST204' || /column|schema cache/i.test(res.error.message || ''))) {
-          res = await supabaseClient.from(CONSULT_TABLE).insert([{ school: payload.school, teacher: payload.teacher, phone: payload.phone }]);
-        }
         if (res.error) throw res.error;
         alert('신청이 완료되었습니다! 담당자가 곧 연락드리겠습니다.');
         resetForm();
@@ -1427,6 +1577,326 @@
   }
   if (tick()) { var iv = setInterval(function () { if (!tick()) clearInterval(iv); }, 1000); }
 })();
+</script>
+<script>
+    // ==========================================================
+    //  관리자 뷰 — 하단 '(주) 툰스퀘어' 5회 클릭 → 비밀번호 → 목록/지도 (2026second 관리자 뷰 복제)
+    //  비밀번호는 프론트엔드에 없습니다. Supabase 함수(admin_list_zero)가 서버에서 검증합니다.
+    // ==========================================================
+    (function () {
+      const supabaseClient = window.zeroSupabase;
+      const gate = document.getElementById("adminGate");
+      const gateInput = document.getElementById("gateInput");
+      const gateMsg = document.getElementById("gateMsg");
+      const view = document.getElementById("adminView");
+      const tip = document.getElementById("adminTip");
+
+      let rows = [], filter = null, passcode = null;
+
+      // ---- 학교명에서 시·도 추정 ----
+      const REGION_KEYS = [
+        ["서울", ["서울"]], ["부산", ["부산"]], ["대구", ["대구"]], ["인천", ["인천"]],
+        ["광주", ["광주"]], ["대전", ["대전"]], ["울산", ["울산"]], ["세종", ["세종"]],
+        ["경기", ["경기","수원","성남","용인","부천","안산","안양","남양주","화성","평택","의정부","시흥","파주","김포","광명","군포","하남","오산","양주","이천","구리","안성","포천","의왕","여주","양평","동두천","과천","가평","연천","고양","일산","분당"]],
+        ["강원", ["강원","춘천","원주","강릉","동해","태백","속초","삼척","홍천","횡성","영월","평창","정선","철원","화천","양구","인제","양양"]],
+        ["충북", ["충북","충청북","청주","충주","제천","보은","옥천","영동","증평","진천","괴산","음성","단양"]],
+        ["충남", ["충남","충청남","천안","공주","보령","아산","온양","서산","논산","계룡","당진","금산","부여","서천","청양","홍성","예산","태안"]],
+        ["전북", ["전북","전라북","전주","군산","익산","정읍","남원","김제","완주","진안","무주","장수","임실","순창","고창","부안"]],
+        ["전남", ["전남","전라남","목포","여수","순천","나주","광양","담양","곡성","구례","고흥","보성","화순","장흥","강진","해남","영암","무안","함평","영광","장성","완도","진도","신안"]],
+        ["경북", ["경북","경상북","포항","경주","김천","안동","구미","영주","영천","상주","문경","경산","군위","의성","청송","영양","영덕","청도","고령","성주","칠곡","예천","봉화","울진","울릉"]],
+        ["경남", ["경남","경상남","창원","진주","통영","사천","김해","밀양","거제","양산","의령","함안","창녕","남해","하동","산청","함양","거창","합천"]],
+        ["제주", ["제주","서귀포"]]
+      ];
+      function detectRegion(school) {
+        const t = (school || "").replace(/\s/g, "");
+        for (const [region, keys] of REGION_KEYS)
+          for (const k of keys) if (t.includes(k)) return region;
+        return "기타";
+      }
+
+      // ---- 단일 색상(바이올렛) 순차 스케일: 옅음 → 진함 ----
+      const LABEL_ADJ = {
+        "서울": [-130, -60], "인천": [-150, 30], "경기": [85, 70],
+        "세종": [-100, -78], "대전": [78, 48],   "광주": [-105, 20],
+        "대구": [40, -34],   "울산": [58, -18],  "부산": [52, 46]
+      };
+      const NONE = "#f0eff5";
+      const RAMP = ["#e7e2fc", "#c8bef9", "#a596f3", "#7f6bed", "#5340d4"];
+      const step = (c, max) => (c <= 0 ? -1 : Math.min(RAMP.length - 1, Math.floor(((c - 1) / Math.max(max, 1)) * RAMP.length)));
+      const fill = (c, max) => (c <= 0 ? NONE : RAMP[step(c, max)]);
+
+      const esc = (v) => String(v == null ? "" : v).replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+      const fmt = (iso) => {
+        const d = new Date(iso);
+        if (isNaN(d)) return "-";
+        const z = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}.${z(d.getMonth() + 1)}.${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
+      };
+
+      function loadMapData() {
+        if (window.KR_MAP) return Promise.resolve();
+        return new Promise((res, rej) => {
+          const el = document.createElement("script");
+          el.src = "kr-map.js"; el.onload = res; el.onerror = rej;
+          document.head.appendChild(el);
+        });
+      }
+
+      const tally = () => {
+        const c = {};
+        rows.forEach((r) => { c[r._region] = (c[r._region] || 0) + 1; });
+        return c;
+      };
+
+      // ---- 지도(단계구분도) ----
+      function renderMap() {
+        const host = document.getElementById("adminMap");
+        const counts = tally();
+        const max = Math.max(1, ...Object.values(counts));
+        const M = window.KR_MAP;
+        if (!M) { host.innerHTML = '<p class="admin__empty">지도를 불러오지 못했습니다.</p>'; return; }
+
+        let svg = `<svg viewBox="-60 -12 ${M.w + 130} ${M.h + 24}" role="img" aria-label="시·도별 접수 분포">`;
+        for (const [name, g] of Object.entries(M.regions)) {
+          const c = counts[name] || 0;
+          svg += `<path d="${g.d}" fill="${fill(c, max)}" data-r="${name}" data-c="${c}"${filter === name ? ' class="sel"' : ""}></path>`;
+        }
+        for (const [name, g] of Object.entries(M.regions)) {
+          const c = counts[name] || 0;
+          if (!c) continue;
+          const [ox, oy] = LABEL_ADJ[name] || [0, 0];
+          const lx = g.cx + ox, ly = g.cy + oy;
+          if (ox || oy) svg += `<line x1="${g.cx}" y1="${g.cy}" x2="${lx}" y2="${ly + 8}" stroke="#9a93b0" stroke-width="2.5"></line>`;
+          const halo = 'fill="#1a1730" stroke="#fff" stroke-width="6" paint-order="stroke" stroke-linejoin="round"';
+          svg += `<text x="${lx}" y="${ly - 4}" font-size="30" ${halo}>${name}</text>`
+               + `<text x="${lx}" y="${ly + 26}" font-size="28" ${halo}>${c}명</text>`;
+        }
+        svg += "</svg>";
+        host.innerHTML = svg;
+        host.appendChild(tip);
+
+        document.getElementById("adminLegend").innerHTML =
+          "<span>적음</span>" + RAMP.map((c) => `<i style="background:${c}"></i>`).join("") + `<span>많음 (최대 ${max}명)</span>`;
+
+        host.querySelectorAll("path").forEach((el) => {
+          el.addEventListener("mousemove", (e) => {
+            const b = host.getBoundingClientRect();
+            tip.style.display = "block";
+            tip.style.left = e.clientX - b.left + "px";
+            tip.style.top = e.clientY - b.top + "px";
+            tip.textContent = `${el.dataset.r} · ${el.dataset.c}명`;
+          });
+          el.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+          el.addEventListener("click", () => {
+            const r = el.dataset.r;
+            filter = filter === r ? null : (counts[r] ? r : null);
+            render();
+          });
+        });
+      }
+
+      function renderChips() {
+        const counts = tally();
+        const list = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        const host = document.getElementById("adminChips");
+        host.innerHTML =
+          `<button type="button" class="admin__chip${filter === null ? " on" : ""}" data-r="">전체 <b>${rows.length}</b></button>` +
+          list.map(([n, c]) => `<button type="button" class="admin__chip${filter === n ? " on" : ""}" data-r="${n}">${n} <b>${c}</b></button>`).join("");
+        host.querySelectorAll(".admin__chip").forEach((b) =>
+          b.addEventListener("click", () => { filter = b.dataset.r || null; render(); }));
+      }
+
+      function renderTable() {
+        const list = filter ? rows.filter((r) => r._region === filter) : rows;
+        document.getElementById("adminNote").textContent =
+          filter ? `· ${filter} ${list.length}건` : `· 전체 ${list.length}건`;
+        const t = document.getElementById("adminTable");
+        if (!list.length) {
+          t.innerHTML = '<tbody><tr><td class="admin__empty">접수된 신청이 없습니다.</td></tr></tbody>';
+          return;
+        }
+        const cell = (v) => (v ? esc(v) : '<span class="admin__no">-</span>');
+        t.innerHTML =
+          "<thead><tr><th>연락</th><th>접수일시</th><th>지역</th><th>학교명</th><th>선생님</th><th>연락처</th><th>인원</th><th>개월수</th><th>이메일</th></tr></thead><tbody>" +
+          list.map((r) => `<tr class="${r.contacted ? "contacted" : ""}">
+              <td class="admin__callcell"><input type="checkbox" class="admin__called" data-id="${r.id}" ${r.contacted ? "checked" : ""} aria-label="연락 완료" title="이미 전화드린 건 체크" /></td>
+              <td>${fmt(r.created_at)}</td>
+              <td>${esc(r._region)}</td>
+              <td>${esc(r.school)}</td>
+              <td>${esc(r.teacher)}</td>
+              <td>${esc(r.phone)}</td>
+              <td>${cell(r.headcount)}</td>
+              <td>${cell(r.months)}</td>
+              <td>${cell(r.email)}</td>
+            </tr>`).join("") + "</tbody>";
+      }
+
+      function render() {
+        document.getElementById("adminCount").textContent = `총 ${rows.length}건`;
+        renderMap(); renderChips(); renderTable();
+      }
+
+      async function fetchRows(code) {
+        if (!supabaseClient) throw new Error("Supabase 미연동");
+        const { data, error } = await supabaseClient.rpc("admin_list_zero", { passcode: code });
+        if (error) throw error;
+        return (data || []).map((r) => Object.assign({}, r, { _region: detectRegion(r.school) }));
+      }
+
+      // ---- 엑셀(.xlsx) 다운로드 ----
+      function loadXlsx() {
+        if (window.XLSX) return Promise.resolve();
+        return new Promise((res, rej) => {
+          const el = document.createElement("script");
+          el.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+          el.onload = res; el.onerror = rej;
+          document.head.appendChild(el);
+        });
+      }
+      function exportData() {
+        const list = filter ? rows.filter((r) => r._region === filter) : rows;
+        return list.map((r) => ({
+          "연락": r.contacted ? "완료" : "",
+          "접수일시": fmt(r.created_at),
+          "지역": r._region || "",
+          "학교명": r.school || "",
+          "선생님": r.teacher || "",
+          "연락처": r.phone || "",
+          "인원": r.headcount || "",
+          "개월수": r.months || "",
+          "이메일": r.email || ""
+        }));
+      }
+      function stamp() {
+        const d = new Date(), z = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}`;
+      }
+      function saveBlob(blob, name) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      function downloadCsv(data, name) {
+        const cell = (v) => {
+          let s = String(v == null ? "" : v);
+          if (/^[=+\-@]/.test(s)) s = "'" + s;          // CSV 인젝션 방지
+          return '"' + s.replace(/"/g, '""') + '"';
+        };
+        const headers = Object.keys(data[0]);
+        const lines = [headers.map(cell).join(",")];
+        data.forEach((row) => lines.push(headers.map((h) => cell(row[h])).join(",")));
+        saveBlob(new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" }), name);
+      }
+      async function downloadExcel() {
+        const data = exportData();
+        if (!data.length) { alert("내보낼 신청 내역이 없습니다."); return; }
+        const base = `투닝잔여예산_견적신청${filter ? "_" + filter : ""}_${stamp()}`;
+        try {
+          await loadXlsx();
+          const ws = XLSX.utils.json_to_sheet(data);
+          ws["!cols"] = [{ wch: 6 }, { wch: 17 }, { wch: 7 }, { wch: 24 }, { wch: 12 }, { wch: 16 }, { wch: 8 }, { wch: 8 }, { wch: 24 }];
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "견적신청");
+          XLSX.writeFile(wb, base + ".xlsx");
+        } catch (err) {
+          console.warn("xlsx 라이브러리 로드 실패 — CSV로 대체", err);
+          downloadCsv(data, base + ".csv");
+        }
+      }
+      document.getElementById("adminExcel").addEventListener("click", downloadExcel);
+
+      function openGate() {
+        gateMsg.className = "form-msg"; gateMsg.textContent = ""; gateInput.value = "";
+        gate.classList.add("open");
+        setTimeout(() => gateInput.focus(), 80);
+      }
+
+      async function submitGate() {
+        const code = gateInput.value.trim();
+        if (code.length !== 4) {
+          gateMsg.className = "form-msg err";
+          gateMsg.textContent = "네 자리를 입력해 주세요.";
+          return;
+        }
+        gateMsg.className = "form-msg";
+        gateMsg.textContent = "확인 중…";
+        try {
+          const [data] = await Promise.all([fetchRows(code), loadMapData()]);
+          rows = data; passcode = code;
+          gate.classList.remove("open");
+          view.classList.add("open");
+          document.body.style.overflow = "hidden";
+          render();
+        } catch (err) {
+          console.error(err);
+          gateMsg.className = "form-msg err";
+          gateMsg.textContent = /28000|unauthorized|올바르지/i.test(err.message || "")
+            ? "비밀번호가 올바르지 않습니다."
+            : "조회에 실패했습니다. (관리자 함수 SQL 실행 여부를 확인해 주세요)";
+        }
+      }
+      document.getElementById("gateSubmit").addEventListener("click", submitGate);
+      gateInput.addEventListener("keydown", (e) => { if (e.key === "Enter") submitGate(); });
+
+      const reloadBtn = document.getElementById("adminReload");
+      reloadBtn.addEventListener("click", async () => {
+        if (reloadBtn.disabled) return;
+        const label = reloadBtn.textContent;
+        reloadBtn.disabled = true;
+        reloadBtn.textContent = "불러오는 중…";
+        try {
+          rows = await fetchRows(passcode);
+          filter = null; render();
+          const d = new Date(), z = (n) => String(n).padStart(2, "0");
+          document.getElementById("adminCount").textContent =
+            `총 ${rows.length}건 · 갱신 ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
+        }
+        catch (err) { console.error(err); alert("새로고침에 실패했습니다."); }
+        finally { reloadBtn.disabled = false; reloadBtn.textContent = label; }
+      });
+      // 닫기: 목록을 지우고 페이지로 돌아감 (다시 보려면 5회 클릭 + 비밀번호)
+      document.getElementById("adminClose").addEventListener("click", () => {
+        rows = []; passcode = null; filter = null;
+        view.classList.remove("open");
+        document.body.style.overflow = "";
+      });
+      const closeGate = () => gate.classList.remove("open");
+      gate.querySelectorAll("[data-gate-close]").forEach((el) => el.addEventListener("click", closeGate));
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeGate(); });
+
+      // ---- 연락 완료 체크 (서버 저장 → 재접속·새로고침에도 유지) ----
+      document.getElementById("adminTable").addEventListener("change", async (e) => {
+        const cb = e.target;
+        if (!cb.classList || !cb.classList.contains("admin__called")) return;
+        const id = Number(cb.dataset.id);
+        const val = cb.checked;
+        cb.disabled = true;
+        const tr = cb.closest("tr");
+        try {
+          const { error } = await supabaseClient.rpc("admin_set_contacted_zero", { passcode, row_id: id, val });
+          if (error) throw error;
+          const r = rows.find((x) => x.id === id);
+          if (r) r.contacted = val;
+          if (tr) tr.classList.toggle("contacted", val);
+        } catch (err) {
+          console.error(err);
+          cb.checked = !val;
+          alert("연락 상태 저장에 실패했습니다. (관리자 함수 SQL 실행 여부 확인)");
+        } finally {
+          cb.disabled = false;
+        }
+      });
+
+      // ---- 하단 '(주) 툰스퀘어' 5회 클릭 ----
+      let taps = 0, timer = null;
+      document.getElementById("brandTap").addEventListener("click", () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => { taps = 0; }, 1800);
+        if (++taps >= 5) { taps = 0; clearTimeout(timer); openGate(); }
+      });
+    })();
 </script>
 </body>
 </html>
