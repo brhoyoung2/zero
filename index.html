@@ -1902,12 +1902,13 @@
         }
         const cell = (v) => (v ? esc(v) : '<span class="admin__no">-</span>');
         t.innerHTML =
-          "<thead><tr><th>연락</th><th>접수일시</th><th>지역</th><th>학교명</th><th>선생님</th><th>연락처</th><th>인원</th><th>개월수</th><th>이메일</th></tr></thead><tbody>" +
+          "<thead><tr><th>연락</th><th>접수일시</th><th>지역</th><th>학교명</th><th>도로명주소</th><th>선생님</th><th>연락처</th><th>인원</th><th>개월수</th><th>이메일</th></tr></thead><tbody>" +
           list.map((r) => `<tr class="${r.contacted ? "contacted" : ""}">
               <td class="admin__callcell"><input type="checkbox" class="admin__called" data-id="${r.id}" ${r.contacted ? "checked" : ""} aria-label="연락 완료" title="이미 전화드린 건 체크" /></td>
               <td>${fmt(r.created_at)}</td>
               <td>${esc(r._region)}</td>
               <td>${esc(r.school)}</td>
+              <td class="wrapcell">${addrCell(r)}</td>
               <td>${esc(r.teacher)}</td>
               <td>${esc(r.phone)}</td>
               <td>${cell(r.headcount)}</td>
@@ -2036,6 +2037,73 @@
           `<div class="admin__stat"><b>${rows.length}</b><span>견적 신청</span></div>`;
       }
 
+      // ---- 도로명주소: 학교명으로 교육부 나이스(NEIS) 학교정보 조회 ----
+      // 키 없이 호출(최대 5건). 학교명과 따로 적힌 지역(예: 투닝초등학교(서울), 부산 해운대중학교)이 있으면
+      // 그 지역 교육청으로 좁혀서 조회 — 학교명 속 지명(예: 광주초등학교)은 지역으로 쓰지 않음
+      const OFFICE = {
+        "서울": "B10", "부산": "C10", "대구": "D10", "인천": "E10", "광주": "F10", "대전": "G10", "울산": "H10", "세종": "I10",
+        "경기": "J10", "강원": "K10", "충북": "M10", "충남": "N10", "전북": "P10", "전남": "Q10", "경북": "R10", "경남": "S10", "제주": "T10"
+      };
+      const addrCache = new Map();
+      async function neis(name, office) {
+        const url = "https://open.neis.go.kr/hub/schoolInfo?Type=json&pIndex=1&pSize=5&SCHUL_NM=" + encodeURIComponent(name)
+          + (office ? "&ATPT_OFCDC_SC_CODE=" + office : "");
+        const j = await (await fetch(url)).json();
+        if (!j.schoolInfo) return { total: 0, list: [] };
+        return { total: j.schoolInfo[0].head[0].list_total_count, list: j.schoolInfo[1].row || [] };
+      }
+      function pick(name, res) {
+        const exact = res.list.filter((x) => (x.SCHUL_NM || "").replace(/\s/g, "") === name);
+        const cand = exact.length ? exact : res.list;
+        if (cand.length === 1 && (res.total === res.list.length || exact.length === 1))
+          return { state: "ok", addr: cand[0].ORG_RDNMA, region: detectRegion(cand[0].LCTN_SC_NM) };
+        return { state: "many", total: res.total, cands: cand.map((x) => `${x.SCHUL_NM} · ${x.ORG_RDNMA}`) };
+      }
+      function lookupSchool(school) {
+        const raw = school || "";
+        const hint = ((raw.match(/\(([^)]*)\)/) || [])[1] || "");
+        const tokens = raw.replace(/\(.*?\)/g, " ").trim().split(/\s+/).filter(Boolean);
+        const nameTok = tokens.filter((t) => /(학교|초|중|고)$/.test(t)).pop();
+        const name = nameTok || tokens.join("");
+        if (!name) return Promise.resolve({ state: "none" });
+        const extra = hint + " " + tokens.filter((t) => t !== nameTok).join(" ");
+        const region = nameTok && extra.trim() ? detectRegion(extra) : "기타";
+        const office = OFFICE[region] || "";
+        const key = name + "|" + office;
+        if (!addrCache.has(key)) {
+          addrCache.set(key, (async () => {
+            if (office) {
+              const r = await neis(name, office);
+              if (r.total) return pick(name, r);
+            }
+            const r = await neis(name, "");
+            return r.total ? pick(name, r) : { state: "none" };
+          })().catch(() => ({ state: "error" })));
+        }
+        return addrCache.get(key);
+      }
+      // 주소를 찾으면 지역(지도)도 주소 기준으로 보정
+      async function enrichAddresses(list) {
+        await Promise.all(list.map(async (r) => {
+          r._addr = await lookupSchool(r.school);
+          if (r._addr.state === "ok" && r._addr.region !== "기타") r._region = r._addr.region;
+        }));
+      }
+      function addrCell(r) {
+        const a = r._addr;
+        if (!a) return '<span class="admin__no">조회 중…</span>';
+        if (a.state === "ok") return esc(a.addr);
+        if (a.state === "many") return `<span class="admin__no" title="${esc(a.cands.join("\n"))}">동명 학교 ${a.total}곳 · 확인 필요</span>`;
+        if (a.state === "error") return '<span class="admin__no">조회 실패</span>';
+        return '<span class="admin__no">학교 정보 없음</span>';
+      }
+      const addrText = (r) => (r._addr && r._addr.state === "ok" ? r._addr.addr : "");
+      // 목록을 먼저 보여 주고, 주소 조회가 끝나면 다시 그림
+      function loadAddresses() {
+        const list = rows;
+        enrichAddresses(list).then(() => { if (list === rows && view.classList.contains("open")) render(); });
+      }
+
       async function fetchRows(code) {
         if (!supabaseClient) throw new Error("Supabase 미연동");
         const { data, error } = await supabaseClient.rpc("admin_list_zero", { passcode: code });
@@ -2060,6 +2128,7 @@
           "접수일시": fmt(r.created_at),
           "지역": r._region || "",
           "학교명": r.school || "",
+          "도로명주소": addrText(r),
           "선생님": r.teacher || "",
           "연락처": r.phone || "",
           "인원": r.headcount || "",
@@ -2096,7 +2165,7 @@
         try {
           await loadXlsx();
           const ws = XLSX.utils.json_to_sheet(data);
-          ws["!cols"] = [{ wch: 6 }, { wch: 17 }, { wch: 7 }, { wch: 24 }, { wch: 12 }, { wch: 16 }, { wch: 8 }, { wch: 8 }, { wch: 24 }];
+          ws["!cols"] = [{ wch: 6 }, { wch: 17 }, { wch: 7 }, { wch: 24 }, { wch: 40 }, { wch: 12 }, { wch: 16 }, { wch: 8 }, { wch: 8 }, { wch: 24 }];
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, "견적신청");
           XLSX.writeFile(wb, base + ".xlsx");
@@ -2129,6 +2198,7 @@
           view.classList.add("open");
           document.body.style.overflow = "hidden";
           render();
+          loadAddresses();
         } catch (err) {
           console.error(err);
           gateMsg.className = "form-msg err";
@@ -2149,6 +2219,7 @@
         try {
           [rows, dl, visits] = await Promise.all([fetchRows(passcode), fetchDownloads(passcode), fetchVisits(passcode)]);
           filter = null; render();
+          loadAddresses();
           const d = new Date(), z = (n) => String(n).padStart(2, "0");
           document.getElementById("adminCount").textContent =
             `총 ${rows.length}건 · 갱신 ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
