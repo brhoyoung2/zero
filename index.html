@@ -443,6 +443,28 @@
     .admin__stat { flex: 1 1 200px; background: #faf9ff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
     .admin__stat b { display: block; font-size: 30px; font-weight: 800; color: var(--violet-dark); line-height: 1.2; }
     .admin__stat span { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+    /* 방문 분석 패널 */
+    .va-tiles { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .va-tile { flex: 1 1 150px; background: #faf9ff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    .va-tile b { display: block; font-size: 26px; font-weight: 800; color: var(--violet-dark); line-height: 1.2; }
+    .va-tile span { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+    .va-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 28px; }
+    @media (max-width: 760px) { .va-grid { grid-template-columns: 1fr; } }
+    .va-block h4 { margin: 0 0 12px; font-size: 14px; font-weight: 800; color: var(--ink); }
+    .va-block h4 em { font-style: normal; font-weight: 600; color: var(--ink-soft); font-size: 12px; }
+    .va-row { display: grid; grid-template-columns: 96px 1fr 46px; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+    .va-row > .va-name { color: var(--ink-soft); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .va-bar { position: relative; height: 20px; background: #efedfa; border-radius: 6px; overflow: hidden; }
+    .va-bar > i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #7f6bed, #5340d4); border-radius: 6px; min-width: 2px; }
+    .va-row > .va-val { text-align: right; font-weight: 800; color: var(--violet-dark); font-variant-numeric: tabular-nums; }
+    .va-hours { display: grid; grid-template-columns: repeat(24, 1fr); gap: 3px; align-items: end; height: 90px; }
+    .va-hours .va-h { position: relative; background: #efedfa; border-radius: 3px 3px 0 0; min-height: 3px; }
+    .va-hours .va-h > i { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, #7f6bed, #5340d4); border-radius: 3px 3px 0 0; }
+    .va-hours-x { display: grid; grid-template-columns: repeat(24, 1fr); gap: 3px; margin-top: 4px; font-size: 9px; color: var(--ink-soft); text-align: center; }
+    .va-funnel { display: flex; flex-direction: column; gap: 8px; }
+    .va-step { display: grid; grid-template-columns: 92px 1fr 84px; align-items: center; gap: 10px; font-size: 13px; }
+    .va-step .va-name { font-weight: 700; color: var(--ink-soft); }
+    .va-step .va-val { text-align: right; font-weight: 800; color: var(--violet-dark); font-variant-numeric: tabular-nums; }
   </style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 
@@ -1112,6 +1134,7 @@
       </div>
     </header>
     <div class="admin__body wrap">
+      <section class="admin__panel admin__stats" id="adminStats"></section>
       <section class="admin__panel">
         <h3 class="admin__h">📍 전국 접수 분포 <span>· 지역을 클릭하면 해당 지역 신청자만 표시됩니다</span></h3>
         <div class="admin__map" id="adminMap"><div class="admin__tip" id="adminTip"></div></div>
@@ -1121,6 +1144,11 @@
       <section class="admin__panel">
         <h3 class="admin__h">신청자 목록 <span id="adminNote"></span></h3>
         <div class="admin__tablewrap"><table class="admin__table" id="adminTable"></table></div>
+      </section>
+
+      <section class="admin__panel">
+        <h3 class="admin__h">👀 방문 분석 <span>· 견적 신청과 별개인 익명 방문 통계입니다</span></h3>
+        <div id="adminVisits"><p class="admin__empty" style="padding:6px">방문 데이터를 불러오는 중…</p></div>
       </section>
     </div>
   </div>
@@ -1294,6 +1322,7 @@
         var res = await supabaseClient.from(CONSULT_TABLE).insert([payload]);
         if (res.error) throw res.error;
         showResult(true, '신청이 완료되었습니다!', '담당자가 곧 연락드리겠습니다.');
+        if (window.__markConsultSubmitted) window.__markConsultSubmitted();
         resetForm();
       } catch (err) {
         console.error(err);
@@ -1634,6 +1663,100 @@
 })();
 </script>
 <script>
+    // ===== 소개서 다운로드 집계 (개인정보 없이 횟수만) — 모바일 버튼도 btn-intro를 클릭함 =====
+    document.getElementById("btn-intro").addEventListener("click", function () {
+      var sb = window.zeroSupabase;
+      if (!sb) return;
+      // 기록 실패해도 버튼 동작은 그대로 진행되도록 오류를 삼킵니다
+      try { sb.from("zero_다운로드").insert([{ kind: "intro" }]).then(function () {}, function () {}); } catch (_) {}
+    });
+
+    // ===== 방문 분석 (익명 · 견적 신청과 별도, 2026second와 같은 방식) =====
+    (function () {
+      // [키, PC 요소 id, 모바일 요소 id] — 페이지 순서대로
+      var SECTIONS = [
+        ["top", "hero", "m-top"], ["intro", "sec-intro", "m-intro"], ["service", "sec-service", "m-svc"],
+        ["price", "sec-price", "m-price"], ["quote", "quote", "m-quote-head"], ["faq", "sec-faq", "m-faq-head"]
+      ];
+      var sid;
+      try {
+        sid = sessionStorage.getItem("vzero");
+        if (!sid) { sid = Math.random().toString(36).slice(2) + Date.now().toString(36); sessionStorage.setItem("vzero", sid); }
+      } catch (_) { sid = "" + Date.now(); }
+
+      var start = Date.now(), maxScroll = 0, deepest = 0;
+      var formStarted = false, formLastField = "", formSubmitted = false;
+      var lastSent = 0;
+
+      function scrollPct() {
+        var h = document.documentElement;
+        var denom = (document.body.scrollHeight || h.scrollHeight) - h.clientHeight;
+        if (denom <= 0) return 100;
+        return Math.max(0, Math.min(100, Math.round(((h.scrollTop || window.scrollY) / denom) * 100)));
+      }
+      // 화면 가운데를 지난 섹션 중 가장 깊은 곳 (PC/모바일 중 보이는 요소 기준)
+      function updateDeepest() {
+        var mid = window.innerHeight / 2;
+        SECTIONS.forEach(function (s, i) {
+          if (i <= deepest) return;
+          [s[1], s[2]].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el && el.getClientRects().length && el.getBoundingClientRect().top < mid) deepest = Math.max(deepest, i);
+          });
+        });
+      }
+      var ticking = false;
+      window.addEventListener("scroll", function () {
+        if (ticking) return; ticking = true;
+        requestAnimationFrame(function () {
+          ticking = false;
+          var p = scrollPct(); if (p > maxScroll) maxScroll = p;
+          updateDeepest();
+        });
+      }, { passive: true });
+
+      var LBL = {
+        "f-school": "학교명", "f-name": "선생님", "f-phone": "연락처", "f-count": "인원",
+        "f-months-btn": "개월수", "f-email": "이메일", "f-agree": "개인정보 동의"
+      };
+      var mark = function (e) {
+        var t = e.target; if (!t || !LBL[t.id]) return;
+        formStarted = true; formLastField = LBL[t.id];
+      };
+      ["focusin", "input", "change"].forEach(function (ev) { document.addEventListener(ev, mark); });
+
+      function device() {
+        var ua = navigator.userAgent;
+        if (/iPad|Tablet/i.test(ua)) return "tablet";
+        if (/Mobi|Android|iPhone|iPod/i.test(ua)) return "mobile";
+        return "desktop";
+      }
+      function send(force) {
+        var now = Date.now();
+        if (!force && now - lastSent < 5000) return;   // 과도한 전송 방지(모바일 앱전환 등)
+        lastSent = now;
+        var body = JSON.stringify({
+          session_id: sid,
+          device: device(),
+          referrer: (document.referrer || "").slice(0, 300),
+          duration_sec: Math.round((now - start) / 1000),
+          max_scroll: maxScroll,
+          last_section: SECTIONS[deepest][0],
+          form_started: formStarted,
+          form_last_field: formSubmitted ? "제출 완료" : (formStarted ? formLastField : ""),
+          form_submitted: formSubmitted
+        });
+        try {
+          fetch("/api/track", { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" }, body: body }).catch(function () { });
+        } catch (_) { }
+      }
+      document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") send(false); });
+      window.addEventListener("pagehide", function () { send(true); });
+      // 견적 신청 성공 시 전환 기록
+      window.__markConsultSubmitted = function () { formSubmitted = true; send(true); };
+    })();
+  </script>
+<script>
     // ==========================================================
     //  관리자 뷰 — 하단 '(주) 툰스퀘어' 5회 클릭 → 비밀번호 → 목록/지도 (2026second 관리자 뷰 복제)
     //  비밀번호는 프론트엔드에 없습니다. Supabase 함수(admin_list_zero)가 서버에서 검증합니다.
@@ -1646,7 +1769,7 @@
       const view = document.getElementById("adminView");
       const tip = document.getElementById("adminTip");
 
-      let rows = [], filter = null, passcode = null;
+      let rows = [], filter = null, passcode = null, dl = null, visits = [];
 
       // ---- 학교명에서 시·도 추정 ----
       const REGION_KEYS = [
@@ -1788,7 +1911,122 @@
 
       function render() {
         document.getElementById("adminCount").textContent = `총 ${rows.length}건`;
-        renderMap(); renderChips(); renderTable();
+        renderStats(); renderMap(); renderChips(); renderTable(); renderVisits();
+      }
+
+      // ---- 방문 분석 ----
+      async function fetchVisits(code) {
+        try {
+          const { data, error } = await supabaseClient.rpc("admin_visits_zero", { passcode: code });
+          if (error) throw error;
+          return data || [];
+        } catch (err) {
+          console.warn("방문 데이터 조회 실패", err);
+          return null;   // 방문 테이블/함수 미설치여도 나머지 관리자 뷰는 동작
+        }
+      }
+      function renderVisits() {
+        const host = document.getElementById("adminVisits");
+        if (!host) return;
+        if (visits === null) {
+          host.innerHTML = '<p class="admin__empty" style="padding:6px">방문 데이터를 불러오지 못했습니다. (방문 분석 SQL·배포 여부 확인)</p>';
+          return;
+        }
+        // 세션별로 가장 완전한(체류 오래된) 기록 1건만 사용
+        const bySid = new Map();
+        visits.forEach((v) => {
+          const k = v.session_id || ("_" + v.id);
+          const cur = bySid.get(k);
+          if (!cur || (v.duration_sec || 0) > (cur.duration_sec || 0)) bySid.set(k, v);
+        });
+        const list = Array.from(bySid.values());
+        const total = list.length;
+        if (!total) { host.innerHTML = '<p class="admin__empty" style="padding:6px">아직 방문 기록이 없습니다.</p>'; return; }
+
+        const started = list.filter((v) => v.form_started).length;
+        const submitted = list.filter((v) => v.form_submitted).length;
+        const cvr = total ? Math.round((submitted / total) * 1000) / 10 : 0;
+        const avgScroll = Math.round(list.reduce((s, v) => s + (v.max_scroll || 0), 0) / total);
+        const avgDur = Math.round(list.reduce((s, v) => s + (v.duration_sec || 0), 0) / total);
+
+        const countBy = (fn) => {
+          const m = {};
+          list.forEach((v) => { const k = fn(v); if (k == null || k === "") return; m[k] = (m[k] || 0) + 1; });
+          return m;
+        };
+        const bars = (obj, order, labelMap) => {
+          let entries = Object.entries(obj);
+          if (order) entries.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
+          else entries.sort((a, b) => b[1] - a[1]);
+          const max = Math.max(1, ...entries.map((e) => e[1]));
+          if (!entries.length) return '<p class="admin__no" style="font-size:13px">데이터 없음</p>';
+          return entries.map(([n, c]) => {
+            const nm = labelMap && labelMap[n] ? labelMap[n] : n;
+            return `<div class="va-row"><span class="va-name">${esc(nm)}</span><div class="va-bar"><i style="width:${Math.round((c / max) * 100)}%"></i></div><span class="va-val">${c}</span></div>`;
+          }).join("");
+        };
+
+        // 섹션 id → 한글 (프론트는 id로 저장 → 인코딩 안전)
+        const SEC = { top: "히어로", intro: "이벤트 소개", service: "투닝 서비스", price: "학교 Pro 요금제", quote: "견적 문의", faq: "자주 묻는 질문" };
+        const SEC_ORDER = ["top", "intro", "service", "price", "quote", "faq"];
+        const region = countBy((v) => v.region || "기타");
+        const lastSec = countBy((v) => v.last_section);
+        const device = countBy((v) => v.device || "기타");
+        // 폼 이탈 지점(시작했지만 미제출)
+        const dropField = countBy((v) => (v.form_started && !v.form_submitted) ? v.form_last_field : "");
+
+        // 시간대(0~23시)
+        const hours = new Array(24).fill(0);
+        list.forEach((v) => { const d = new Date(v.created_at); if (!isNaN(d)) hours[d.getHours()]++; });
+        const hmax = Math.max(1, ...hours);
+        const hoursHtml = hours.map((c) => `<div class="va-h" title="${c}건" style="height:${Math.max(4, Math.round((c / hmax) * 100))}%"><i style="height:100%"></i></div>`).join("");
+        const hoursX = hours.map((_, i) => `<span>${i % 6 === 0 ? i : ""}</span>`).join("");
+
+        host.innerHTML =
+          '<div class="va-tiles">' +
+            `<div class="va-tile"><b>${total}</b><span>총 방문 세션</span></div>` +
+            `<div class="va-tile"><b>${started}</b><span>폼 작성 시작</span></div>` +
+            `<div class="va-tile"><b>${submitted}</b><span>견적 신청(전환)</span></div>` +
+            `<div class="va-tile"><b>${cvr}%</b><span>전환율</span></div>` +
+            `<div class="va-tile"><b>${avgScroll}%</b><span>평균 스크롤</span></div>` +
+            `<div class="va-tile"><b>${avgDur}s</b><span>평균 체류</span></div>` +
+          '</div>' +
+          '<div class="va-grid">' +
+            `<div class="va-block"><h4>지역별 방문 <em>(지오IP)</em></h4>${bars(region)}</div>` +
+            `<div class="va-block"><h4>이탈 지점 <em>· 마지막으로 본 섹션</em></h4>${bars(lastSec, SEC_ORDER, SEC)}</div>` +
+            `<div class="va-block"><h4>폼 퍼널</h4>` +
+              '<div class="va-funnel">' +
+                `<div class="va-step"><span class="va-name">방문</span><div class="va-bar"><i style="width:100%"></i></div><span class="va-val">${total}</span></div>` +
+                `<div class="va-step"><span class="va-name">작성 시작</span><div class="va-bar"><i style="width:${Math.round((started / total) * 100)}%"></i></div><span class="va-val">${started} (${Math.round((started / total) * 100)}%)</span></div>` +
+                `<div class="va-step"><span class="va-name">제출 완료</span><div class="va-bar"><i style="width:${Math.round((submitted / total) * 100)}%"></i></div><span class="va-val">${submitted} (${cvr}%)</span></div>` +
+              '</div>' +
+              `<h4 style="margin-top:16px">작성 중 이탈 필드</h4>${bars(dropField)}` +
+            `</div>` +
+            `<div class="va-block"><h4>기기</h4>${bars(device)}` +
+              `<h4 style="margin-top:16px">시간대별 방문 <em>· 0~23시</em></h4><div class="va-hours">${hoursHtml}</div><div class="va-hours-x">${hoursX}</div>` +
+            `</div>` +
+          '</div>';
+      }
+
+      async function fetchDownloads(code) {
+        try {
+          const { data, error } = await supabaseClient.rpc("admin_downloads_zero", { passcode: code });
+          if (error) throw error;
+          const m = { intro: 0 };
+          (data || []).forEach((r) => { m[r.kind] = Number(r.cnt) || 0; });
+          return m;
+        } catch (err) {
+          console.warn("다운로드 집계 조회 실패", err);
+          return null;   // 집계 SQL 미실행이어도 관리자 뷰는 계속 동작
+        }
+      }
+
+      function renderStats() {
+        const host = document.getElementById("adminStats");
+        if (!dl) { host.innerHTML = '<p class="admin__empty" style="padding:6px">다운로드 집계를 불러오지 못했습니다. (집계 SQL 실행 여부 확인)</p>'; return; }
+        host.innerHTML =
+          `<div class="admin__stat"><b>${dl.intro}</b><span>소개서 다운받기 클릭</span></div>` +
+          `<div class="admin__stat"><b>${rows.length}</b><span>견적 신청</span></div>`;
       }
 
       async function fetchRows(code) {
@@ -1878,8 +2116,8 @@
         gateMsg.className = "form-msg";
         gateMsg.textContent = "확인 중…";
         try {
-          const [data] = await Promise.all([fetchRows(code), loadMapData()]);
-          rows = data; passcode = code;
+          const [data, dls, vs] = await Promise.all([fetchRows(code), fetchDownloads(code), fetchVisits(code), loadMapData()]);
+          rows = data; dl = dls; visits = vs; passcode = code;
           gate.classList.remove("open");
           view.classList.add("open");
           document.body.style.overflow = "hidden";
@@ -1902,7 +2140,7 @@
         reloadBtn.disabled = true;
         reloadBtn.textContent = "불러오는 중…";
         try {
-          rows = await fetchRows(passcode);
+          [rows, dl, visits] = await Promise.all([fetchRows(passcode), fetchDownloads(passcode), fetchVisits(passcode)]);
           filter = null; render();
           const d = new Date(), z = (n) => String(n).padStart(2, "0");
           document.getElementById("adminCount").textContent =
@@ -1913,7 +2151,7 @@
       });
       // 닫기: 목록을 지우고 페이지로 돌아감 (다시 보려면 5회 클릭 + 비밀번호)
       document.getElementById("adminClose").addEventListener("click", () => {
-        rows = []; passcode = null; filter = null;
+        rows = []; visits = []; dl = null; passcode = null; filter = null;
         view.classList.remove("open");
         document.body.style.overflow = "";
       });
