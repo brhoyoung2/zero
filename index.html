@@ -259,6 +259,28 @@
     .pm-table th:nth-child(2) { width: 37.5%; }
     body.pm-open { overflow: hidden; }
 
+    /* ── 견적 신청 결과 안내 (화면 중앙) ── */
+    #result-modal { z-index: 1100; }
+    .rm {
+      width: 100%; max-width: 400px; background: #fff; border-radius: 16px;
+      padding: 32px 24px 24px; box-sizing: border-box; text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,.12);
+    }
+    .rm-icon { width: 48px; height: 48px; margin: 0 auto 16px; border-radius: 50%; background: #EEEBFF; display: grid; place-items: center; }
+    .rm-icon svg { width: 26px; height: 26px; fill: none; stroke: #776EFF; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .rm-icon svg[hidden] { display: none; }
+    .rm.err .rm-icon { background: #FFECEE; }
+    .rm.err .rm-icon svg { stroke: #FF3B47; }
+    .rm-title { margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #242424; line-height: 1.4; }
+    .rm-desc { margin: 0 0 24px; font-size: 15px; line-height: 1.6; color: #424242; word-break: keep-all; }
+    .rm-ok {
+      all: unset; box-sizing: border-box; width: 100%; height: 52px; border-radius: 999px; cursor: pointer;
+      background: #776EFF; color: #fff; font-size: 16px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; transition: background-color .15s;
+    }
+    .rm-ok:hover { background: #6A60F0; }
+    .rm-ok:focus-visible { outline: 3px solid #B9B3FF; outline-offset: 3px; }
+
     /* ── FAQ 아코디언 (HTML) ── */
     #faq { background: #fff; font-family: "Noto Sans KR", sans-serif; }
     #faq .faq-list {
@@ -1031,6 +1053,19 @@
   </div>
 
   <!-- 개인정보 활용 동의 모달 -->
+  <!-- 견적 신청 결과 안내 -->
+  <div id="result-modal" class="pm-dim" hidden>
+    <div class="rm" role="alertdialog" aria-modal="true" aria-labelledby="rm-title" aria-describedby="rm-desc">
+      <div class="rm-icon" aria-hidden="true">
+        <svg class="rm-ico-ok" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        <svg class="rm-ico-err" viewBox="0 0 24 24" hidden><path d="M12 7v6M12 17v.01"/></svg>
+      </div>
+      <h2 class="rm-title" id="rm-title"></h2>
+      <p class="rm-desc" id="rm-desc"></p>
+      <button type="button" class="rm-ok">확인</button>
+    </div>
+  </div>
+
   <div id="privacy-modal" class="pm-dim" hidden>
     <div class="pm" role="dialog" aria-modal="true" aria-labelledby="pm-title">
       <div class="pm-head">
@@ -1213,6 +1248,26 @@
     var supabaseClient = window.zeroSupabase;
     var CONSULT_TABLE = 'zero_상담신청';
     var val = function (id) { return document.getElementById(id).value.trim(); };
+    // 결과 안내 모달 (브라우저 alert 대신 화면 중앙에 표시) — 확인·배경 클릭·Esc로 닫기
+    var resultModal = document.getElementById('result-modal');
+    var resultBox = resultModal.querySelector('.rm');
+    var resultOk = resultModal.querySelector('.rm-ok');
+    var showResult = function (ok, title, desc) {
+      resultBox.classList.toggle('err', !ok);
+      resultModal.querySelector('.rm-ico-ok').hidden = !ok;
+      resultModal.querySelector('.rm-ico-err').hidden = ok;
+      document.getElementById('rm-title').textContent = title;
+      document.getElementById('rm-desc').textContent = desc;
+      resultModal.hidden = false; document.body.classList.add('pm-open');
+      resultOk.focus();
+    };
+    var hideResult = function () {
+      if (resultModal.hidden) return;
+      resultModal.hidden = true; document.body.classList.remove('pm-open');
+    };
+    resultOk.addEventListener('click', hideResult);
+    resultModal.addEventListener('click', function (e) { if (e.target === resultModal) hideResult(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideResult(); });
     var resetForm = function () {
       textIds.forEach(function (id) { document.getElementById(id).value = ''; });
       monthsVal.value = '';
@@ -1238,11 +1293,11 @@
         if (!supabaseClient) throw new Error('Supabase 미연동');
         var res = await supabaseClient.from(CONSULT_TABLE).insert([payload]);
         if (res.error) throw res.error;
-        alert('신청이 완료되었습니다! 담당자가 곧 연락드리겠습니다.');
+        showResult(true, '신청이 완료되었습니다!', '담당자가 곧 연락드리겠습니다.');
         resetForm();
       } catch (err) {
         console.error(err);
-        alert('전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+        showResult(false, '전송 중 오류가 발생했습니다', '잠시 후 다시 시도해 주세요.');
       } finally {
         submitBtn.textContent = '견적 신청하기';
         syncSubmit();
