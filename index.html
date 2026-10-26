@@ -511,6 +511,9 @@
 .hero-drop-m .hd-patch{position:absolute;left:calc(var(--s) * (495.3 - 500));top:calc(var(--s) * (844.3 - 860));width:calc(var(--s) * 955);height:calc(var(--s) * 665);background:#8178FF;-webkit-mask:url("hero-patch-mask.png") 0 0 / 100% 100% no-repeat;mask:url("hero-patch-mask.png") 0 0 / 100% 100% no-repeat}
 .hero-drop-m .hd{position:absolute;display:block;height:auto;max-width:none;margin:0;left:calc(var(--s) * (var(--x) - 500));top:calc(var(--s) * (var(--y) - 860));width:calc(var(--s) * var(--w));transform-origin:50% 100%;translate:0 calc(var(--s) * -1100);will-change:translate,rotate,scale}
 .hero-drop-m.go .hd{animation:hdFall 0.65s var(--d) both,hdLand .4s calc(var(--d) + 0.403s) both,hdBump .3s var(--b1, 99s) both,hdBump2 .3s var(--b2, 99s) both}
+.hero-drop-m .hdm-clip{display:none}
+.m-hero-art .s-hero{position:relative}
+.m-hero-art .s-hero::after{content:"";position:absolute;left:calc(100% * (495.3 - 500) / 930);top:calc(100% * (844.3 - 860) / 560);width:calc(100% * 955 / 930);height:calc(100% * 665 / 560);background:#8178FF;-webkit-mask:url("hero-patch-mask.png") 0 0 / 100% 100% no-repeat;mask:url("hero-patch-mask.png") 0 0 / 100% 100% no-repeat}
 </style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 
