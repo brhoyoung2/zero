@@ -1226,7 +1226,7 @@
     var easeOut = function (t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); };
     var run = function (el) {
       var to = +el.dataset.to, unit = el.dataset.unit, span = el.querySelector('span');
-      var duration = 1400, t0 = performance.now();
+      var duration = 1100, t0 = performance.now();
       (function step(now) {
         var p = Math.min((now - t0) / duration, 1);
         span.textContent = Math.round(to * easeOut(p)).toLocaleString('ko-KR') + unit;
