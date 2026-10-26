@@ -2346,5 +2346,129 @@
   });
 })();
 </script>
+<!-- ═════════ 함께라서 더 강력한 4종 : 재생 버튼 + 유튜브 모달 ═════════
+     - 이미지 어디를 눌러도 모달에서 영상 재생, 서비스 사이트 이동은 '>' 화살표 버튼에서만 됩니다.
+     - 영상 교체는 아래 YT_VIDEOS 의 ID만 바꾸면 됩니다. -->
+<style>
+  .yt-play{
+    position:absolute; left:50%; top:50%; z-index:5;
+    width:72px; height:72px; margin:-36px 0 0 -36px;
+    border-radius:50%; background:rgba(0,0,0,.55);
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+    box-shadow:0 6px 20px rgba(0,0,0,.25);
+    transition:transform .2s ease, background .2s ease;
+  }
+  .yt-play::before{
+    content:""; margin-left:6px;
+    border-style:solid; border-width:14px 0 14px 23px;
+    border-color:transparent transparent transparent #fff;
+  }
+  a.hit.img:hover .yt-play, .m-thumb:hover .yt-play{ transform:scale(1.08); background:rgba(129,120,255,.9); }
+  .m-thumb:focus-visible{ outline:3px solid #8178FF; outline-offset:3px; }
+  .m-thumb{ position:relative; }
+  @media (max-width:1023px){
+    .yt-play{ width:56px; height:56px; margin:-28px 0 0 -28px; }
+    .yt-play::before{ border-width:11px 0 11px 18px; margin-left:5px; }
+  }
+
+  .yt-modal{
+    position:fixed; inset:0; z-index:99999;
+    display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.75); padding:20px;
+  }
+  .yt-modal.open{ display:flex; }
+  .yt-modal-box{ position:relative; width:min(960px, 100%); }
+  .yt-modal-frame{
+    position:relative; width:100%; aspect-ratio:16/9;
+    background:#000; border-radius:12px; overflow:hidden;
+  }
+  .yt-modal-frame iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .yt-modal-close{
+    position:absolute; right:0; top:-48px;
+    width:40px; height:40px; border:0; border-radius:50%;
+    background:rgba(255,255,255,.15); color:#fff;
+    font-size:26px; line-height:40px; cursor:pointer;
+  }
+  .yt-modal-close:hover{ background:rgba(255,255,255,.3); }
+</style>
+
+<div class="yt-modal" id="yt-modal" role="dialog" aria-modal="true" aria-label="서비스 소개 영상">
+  <div class="yt-modal-box">
+    <button type="button" class="yt-modal-close" aria-label="영상 닫기">&times;</button>
+    <div class="yt-modal-frame"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // 서비스 도메인 → 유튜브 영상 ID
+  var YT_VIDEOS = {
+    'mon.tooning.io':     { id:'Wy-z_qEE8_s', name:'투닝 퀴즈' },
+    'read.tooning.io':    { id:'mSTy_5qosfY', name:'투닝 리딩' },
+    'writing.tooning.io': { id:'aN7qkjjtYmI', name:'투닝 글쓰기' },
+    'taja.tooning.io':    { id:'c1vO8K-vUPQ', name:'투닝 타자연습' }
+  };
+
+  var modal = document.getElementById('yt-modal');
+  var frame = modal.querySelector('.yt-modal-frame');
+  var lastFocus = null;
+
+  function openVideo(id){
+    lastFocus = document.activeElement;
+    frame.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id +
+      '?autoplay=1&rel=0&playsinline=1" title="YouTube video" ' +
+      'allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+    modal.classList.add('open');
+    document.documentElement.style.overflow = 'hidden';
+    modal.querySelector('.yt-modal-close').focus();
+  }
+  function closeVideo(){
+    modal.classList.remove('open');
+    frame.innerHTML = '';               // 닫으면 재생 중지
+    document.documentElement.style.overflow = '';
+    if (lastFocus) lastFocus.focus();
+  }
+
+  // 이미지 전체(container)를 누르면 영상 재생 — 서비스 이동은 '>' 버튼에서만
+  function addPlay(container, v){
+    var b = document.createElement('span');
+    b.className = 'yt-play';
+    b.setAttribute('aria-hidden', 'true');
+    container.appendChild(b);
+    container.style.cursor = 'pointer';
+    container.setAttribute('aria-label', v.name + ' 소개 영상 재생');
+    function go(e){ e.preventDefault(); e.stopPropagation(); openVideo(v.id); }
+    container.addEventListener('click', go);
+    container.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') go(e); });
+  }
+
+  // PC: 이미지 위 클릭 영역(a.hit.img) → 영상 / a.hit.arrow(>) → 기존대로 서비스 이동
+  document.querySelectorAll('#card-links a.hit.img').forEach(function(a){
+    var v = YT_VIDEOS[a.hostname];
+    if (v) addPlay(a, v);
+  });
+  // 모바일: 썸네일 → 영상 / '>' 화살표 → 서비스 이동 / 그 외 카드 영역 → 이동 안 함
+  document.querySelectorAll('.m-card a').forEach(function(a){
+    var v = YT_VIDEOS[a.hostname];
+    var thumb = a.querySelector('.m-thumb');
+    if (!v || !thumb) return;
+    addPlay(thumb, v);
+    thumb.setAttribute('role', 'button');
+    thumb.setAttribute('tabindex', '0');
+    a.addEventListener('click', function(e){
+      if (!e.target.closest('.m-arrow')) e.preventDefault();
+    });
+  });
+
+  modal.addEventListener('click', function(e){ if (e.target === modal) closeVideo(); });
+  modal.querySelector('.yt-modal-close').addEventListener('click', closeVideo);
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && modal.classList.contains('open')) closeVideo();
+  });
+})();
+</script>
+<!-- ═════════ /유튜브 모달 ═════════ -->
+
 </body>
 </html>
