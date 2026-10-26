@@ -465,7 +465,44 @@
     .va-step { display: grid; grid-template-columns: 92px 1fr 84px; align-items: center; gap: 10px; font-size: 13px; }
     .va-step .va-name { font-weight: 700; color: var(--ink-soft); }
     .va-step .va-val { text-align: right; font-weight: 800; color: var(--violet-dark); font-variant-numeric: tabular-nums; }
-  </style>
+  /* ===== Hero drop & stack ===== */
+#hero .hero-drop{position:absolute;inset:0;pointer-events:none}
+#hero .hd-patch{position:absolute;
+  left:calc(50% + var(--s) * (495.3 - 960));top:calc(var(--s) * (844.3 - 250));
+  width:calc(var(--s) * 955);height:calc(var(--s) * 665);
+  background:#8178FF;
+  -webkit-mask:url("hero-patch-mask.png") 0 0 / 100% 100% no-repeat;
+          mask:url("hero-patch-mask.png") 0 0 / 100% 100% no-repeat}
+#hero .hd{position:absolute;display:block;height:auto;max-width:none;margin:0;
+  left:calc(50% + var(--s) * (var(--x) - 960));top:calc(var(--s) * (var(--y) - 250));
+  width:calc(var(--s) * var(--w));
+  transform-origin:50% 100%;translate:0 calc(var(--s) * -1100);will-change:translate,rotate,scale}
+#hero .hero-drop.go .hd{animation:
+  hdFall 0.9s var(--d) both,
+  hdLand .55s calc(var(--d) + 0.558s) both,
+  hdBump .4s var(--b1, 99s) both,
+  hdBump2 .4s var(--b2, 99s) both}
+/* 떨어짐: 중력처럼 가속 → 착지 → 살짝 튀고 → 안착 */
+@keyframes hdFall{
+  0%  {translate:0 calc(var(--s) * -1100);rotate:var(--r);animation-timing-function:cubic-bezier(.45,0,.9,.55)}
+  62% {translate:0 0;rotate:calc(var(--r) * -.12);animation-timing-function:cubic-bezier(.2,.6,.4,1)}
+  80% {translate:0 -4.5%;rotate:calc(var(--r) * .05);animation-timing-function:cubic-bezier(.6,0,.8,.4)}
+  92% {translate:0 0;rotate:0deg;animation-timing-function:ease-out}
+  96% {translate:0 -.8%}
+  100%{translate:0 0;rotate:0deg}
+}
+/* 착지할 때 말랑하게 눌림 */
+@keyframes hdLand{
+  0%  {scale:1 1}
+  25% {scale:1.05 .92}
+  55% {scale:.985 1.02}
+  80% {scale:1.008 .995}
+  100%{scale:1 1}
+}
+/* 위에 다른 요소가 얹힐 때 아래 요소가 살짝 눌림 */
+@keyframes hdBump{0%,100%{scale:1 1}30%{scale:calc(1 + .02 * var(--a1,1)) calc(1 - .035 * var(--a1,1))}65%{scale:1 calc(1 + .008 * var(--a1,1))}}
+@keyframes hdBump2{0%,100%{scale:1 1}30%{scale:calc(1 + .02 * var(--a2,1)) calc(1 - .035 * var(--a2,1))}65%{scale:1 calc(1 + .008 * var(--a2,1))}}
+</style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 
 <style id="responsive-style">
@@ -907,6 +944,15 @@
 <body>
 
   <div id="hero" role="img" aria-label="투닝 잔여 예산 프로모션 11.04 ~ 12.23">
+  <div class="hero-drop" aria-hidden="true">
+    <div class="hd-patch"></div>
+    <img class="hd" src="hero-clipboard.webp" alt="" style="--x:1022.6;--y:884.0;--w:325.0;--d:0.12s;--r:9deg;--b1:0.98s;--a1:0.6;--b2:1.18s;--a2:0.5">
+    <img class="hd" src="hero-ruler.webp" alt="" style="--x:1214.6;--y:1103.4;--w:238.8;--d:0.3s;--r:-12deg;--b1:1.18s;--a1:0.7">
+    <img class="hd" src="hero-pencil.webp" alt="" style="--x:603.8;--y:923.5;--w:192.4;--d:0.8s;--r:16deg">
+    <img class="hd" src="hero-books.webp" alt="" style="--x:499.0;--y:1135.5;--w:329.9;--d:0.0s;--r:-5deg;--b1:0.98s;--a1:1;--b2:1.36s;--a2:0.5">
+    <img class="hd" src="hero-piggy.webp" alt="" style="--x:649.1;--y:911.8;--w:608.9;--d:0.42s;--r:6deg;--b1:1.18s;--a1:0.5">
+    <img class="hd" src="hero-calculator.webp" alt="" style="--x:1087.6;--y:1146.1;--w:264.0;--d:0.62s;--r:-9deg">
+  </div>
     <div class="date-patch" aria-hidden="true"></div>
     <div class="date-pill" aria-hidden="true">11.04 ~ 12.23</div>
     <a id="hero-cta" href="#quote" aria-label="견적 신청하기"></a>
@@ -2267,6 +2313,14 @@
         if (++taps >= 5) { taps = 0; clearTimeout(timer); openGate(); }
       });
     })();
+</script>
+<script>
+(function(){
+  var box=document.querySelector('#hero .hero-drop'); if(!box) return;
+  var imgs=[].slice.call(box.querySelectorAll('img'));
+  Promise.all(imgs.map(function(i){return i.decode?i.decode().catch(function(){}):Promise.resolve();}))
+    .then(function(){requestAnimationFrame(function(){box.classList.add('go');});});
+})();
 </script>
 </body>
 </html>
