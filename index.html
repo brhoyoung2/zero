@@ -502,6 +502,15 @@
 /* 위에 다른 요소가 얹힐 때 아래 요소가 살짝 눌림 */
 @keyframes hdBump{0%,100%{scale:1 1}30%{scale:calc(1 + .02 * var(--a1,1)) calc(1 - .035 * var(--a1,1))}65%{scale:1 calc(1 + .008 * var(--a1,1))}}
 @keyframes hdBump2{0%,100%{scale:1 1}30%{scale:calc(1 + .02 * var(--a2,1)) calc(1 - .035 * var(--a2,1))}65%{scale:1 calc(1 + .008 * var(--a2,1))}}
+
+/* ===== Mobile hero drop ===== */
+.m-hero-art{position:relative;width:100%;max-width:480px;margin:16px auto 0;container-type:inline-size}
+.m-hero .m-hero-art > .s-hero{margin:0;max-width:none}
+.hero-drop-m{position:absolute;inset:0;pointer-events:none;--s:calc(100cqw / 930)}
+.hero-drop-m .hdm-clip{position:absolute;inset:0;overflow:hidden;-webkit-mask-image:radial-gradient(closest-side,#000 78%,transparent 100%);mask-image:radial-gradient(closest-side,#000 78%,transparent 100%)}
+.hero-drop-m .hd-patch{position:absolute;left:calc(var(--s) * (495.3 - 500));top:calc(var(--s) * (844.3 - 860));width:calc(var(--s) * 955);height:calc(var(--s) * 665);background:#8178FF;-webkit-mask:url("hero-patch-mask.png") 0 0 / 100% 100% no-repeat;mask:url("hero-patch-mask.png") 0 0 / 100% 100% no-repeat}
+.hero-drop-m .hd{position:absolute;display:block;height:auto;max-width:none;margin:0;left:calc(var(--s) * (var(--x) - 500));top:calc(var(--s) * (var(--y) - 860));width:calc(var(--s) * var(--w));transform-origin:50% 100%;translate:0 calc(var(--s) * -1100);will-change:translate,rotate,scale}
+.hero-drop-m.go .hd{animation:hdFall 0.65s var(--d) both,hdLand .4s calc(var(--d) + 0.403s) both,hdBump .3s var(--b1, 99s) both,hdBump2 .3s var(--b2, 99s) both}
 </style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 
@@ -607,7 +616,7 @@
       #ev-topbar li:last-child { margin-right: auto; }
       #ev-topbar a { font-size: 14px; }
       #ev-topbar a::after { bottom: 9px; height: 2px; }
-      .m-hero { padding-top: calc(44px + var(--topbar-h)); }
+      .m-hero { padding-top: calc(114px + var(--topbar-h)); }
       #m-svc, #m-price, #m-quote-head, #m-faq-head { scroll-margin-top: var(--topbar-h); }
       #ev-bottombar { justify-content: space-between; gap: 12px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
       #ev-bottombar .eb-info { min-width: 0; }
@@ -1404,7 +1413,18 @@
       <span class="m-date">11.04 ~ 12.23</span>
       <h1><span class="m-sp s-title" role="img" aria-label="투닝 잔여 예산 프로모션"></span></h1>
       <p class="m-hero-sub">남은 예산도 알차게! 딱맞게!</p>
+      <div class="m-hero-art">
       <div class="m-sp s-hero" aria-hidden="true"></div>
+      <div class="hero-drop hero-drop-m" aria-hidden="true">
+      <div class="hdm-clip"><div class="hd-patch"></div></div>
+      <img class="hd" src="hero-clipboard.webp" alt="" style="--x:1022.6;--y:884.0;--w:325.0;--d:0.08s;--r:9deg;--b1:0.66s;--a1:0.6;--b2:0.78s;--a2:0.5">
+      <img class="hd" src="hero-ruler.webp" alt="" style="--x:1214.6;--y:1103.4;--w:238.8;--d:0.18s;--r:-12deg;--b1:0.78s;--a1:0.7">
+      <img class="hd" src="hero-pencil.webp" alt="" style="--x:640;--y:955;--w:192.4;--d:0.48s;--r:16deg">
+      <img class="hd" src="hero-books.webp" alt="" style="--x:499.0;--y:1135.5;--w:329.9;--d:0s;--r:-5deg;--b1:0.66s;--a1:1;--b2:0.88s;--a2:0.5">
+      <img class="hd" src="hero-piggy.webp" alt="" style="--x:649.1;--y:911.8;--w:608.9;--d:0.26s;--r:6deg;--b1:0.78s;--a1:0.5">
+      <img class="hd" src="hero-calculator.webp" alt="" style="--x:1087.6;--y:1146.1;--w:264.0;--d:0.38s;--r:-9deg">
+      </div>
+      </div>
       <a class="m-cta" href="#m-quote-head" data-m-scroll>견적 신청하기</a>
     </div>
   </section>
@@ -2316,10 +2336,11 @@
 </script>
 <script>
 (function(){
-  var box=document.querySelector('#hero .hero-drop'); if(!box) return;
+  [].slice.call(document.querySelectorAll('.hero-drop')).forEach(function(box){
   var imgs=[].slice.call(box.querySelectorAll('img'));
   Promise.all(imgs.map(function(i){return i.decode?i.decode().catch(function(){}):Promise.resolve();}))
     .then(function(){requestAnimationFrame(function(){box.classList.add('go');});});
+  });
 })();
 </script>
 </body>
