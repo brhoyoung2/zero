@@ -478,10 +478,10 @@
   width:calc(var(--s) * var(--w));
   transform-origin:50% 100%;translate:0 calc(var(--s) * -1100);will-change:translate,rotate,scale}
 #hero .hero-drop.go .hd{animation:
-  hdFall 0.9s var(--d) both,
-  hdLand .55s calc(var(--d) + 0.558s) both,
-  hdBump .4s var(--b1, 99s) both,
-  hdBump2 .4s var(--b2, 99s) both}
+  hdFall 0.65s var(--d) both,
+  hdLand .4s calc(var(--d) + 0.403s) both,
+  hdBump .3s var(--b1, 99s) both,
+  hdBump2 .3s var(--b2, 99s) both}
 /* 떨어짐: 중력처럼 가속 → 착지 → 살짝 튀고 → 안착 */
 @keyframes hdFall{
   0%  {translate:0 calc(var(--s) * -1100);rotate:var(--r);animation-timing-function:cubic-bezier(.45,0,.9,.55)}
@@ -946,12 +946,12 @@
   <div id="hero" role="img" aria-label="투닝 잔여 예산 프로모션 11.04 ~ 12.23">
   <div class="hero-drop" aria-hidden="true">
     <div class="hd-patch"></div>
-    <img class="hd" src="hero-clipboard.webp" alt="" style="--x:1022.6;--y:884.0;--w:325.0;--d:0.12s;--r:9deg;--b1:0.98s;--a1:0.6;--b2:1.18s;--a2:0.5">
-    <img class="hd" src="hero-ruler.webp" alt="" style="--x:1214.6;--y:1103.4;--w:238.8;--d:0.3s;--r:-12deg;--b1:1.18s;--a1:0.7">
-    <img class="hd" src="hero-pencil.webp" alt="" style="--x:603.8;--y:923.5;--w:192.4;--d:0.8s;--r:16deg">
-    <img class="hd" src="hero-books.webp" alt="" style="--x:499.0;--y:1135.5;--w:329.9;--d:0.0s;--r:-5deg;--b1:0.98s;--a1:1;--b2:1.36s;--a2:0.5">
-    <img class="hd" src="hero-piggy.webp" alt="" style="--x:649.1;--y:911.8;--w:608.9;--d:0.42s;--r:6deg;--b1:1.18s;--a1:0.5">
-    <img class="hd" src="hero-calculator.webp" alt="" style="--x:1087.6;--y:1146.1;--w:264.0;--d:0.62s;--r:-9deg">
+    <img class="hd" src="hero-clipboard.webp" alt="" style="--x:1022.6;--y:884.0;--w:325.0;--d:0.08s;--r:9deg;--b1:0.66s;--a1:0.6;--b2:0.78s;--a2:0.5">
+    <img class="hd" src="hero-ruler.webp" alt="" style="--x:1214.6;--y:1103.4;--w:238.8;--d:0.18s;--r:-12deg;--b1:0.78s;--a1:0.7">
+    <img class="hd" src="hero-pencil.webp" alt="" style="--x:640;--y:955;--w:192.4;--d:0.48s;--r:16deg">
+    <img class="hd" src="hero-books.webp" alt="" style="--x:499.0;--y:1135.5;--w:329.9;--d:0s;--r:-5deg;--b1:0.66s;--a1:1;--b2:0.88s;--a2:0.5">
+    <img class="hd" src="hero-piggy.webp" alt="" style="--x:649.1;--y:911.8;--w:608.9;--d:0.26s;--r:6deg;--b1:0.78s;--a1:0.5">
+    <img class="hd" src="hero-calculator.webp" alt="" style="--x:1087.6;--y:1146.1;--w:264.0;--d:0.38s;--r:-9deg">
   </div>
     <div class="date-patch" aria-hidden="true"></div>
     <div class="date-pill" aria-hidden="true">11.04 ~ 12.23</div>
