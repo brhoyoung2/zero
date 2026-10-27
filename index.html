@@ -1019,6 +1019,7 @@
   <div id="quote"></div>
 
   <div id="card-links">
+  <div class="quote-tint" aria-hidden="true"></div>
   <img class="svc-anim" style="--x:765;--y:2517;--w:390;--h:324" src="https://cdn.imweb.me/upload/S20210414ac39e991aa740/ec2e6beb6c819.png" alt="" aria-hidden="true" decoding="async">
   <img class="svc-anim" style="--x:1186;--y:2517;--w:390;--h:324" src="https://cdn.imweb.me/upload/S20210414ac39e991aa740/0af0e1acd97ad.png" alt="" aria-hidden="true" decoding="async">
   <img class="svc-anim" style="--x:344;--y:2998;--w:390;--h:325" src="https://cdn.imweb.me/upload/S20210414ac39e991aa740/b77e462f39017.png" alt="" aria-hidden="true" decoding="async">
@@ -1079,7 +1080,7 @@
     <div class="btn-cover" aria-hidden="true" style="--x:826;--y:7222;--w:268;--h:80"></div>
     <a class="pbtn" id="btn-pro" href="https://tooning.io/tooning-price-plan?type=school" target="_blank" rel="noopener" style="--cy:7261.5">Pro 혜택 더 보기</a>
 
-    <div class="btn-cover" aria-hidden="true" style="--x:843;--y:8378;--w:234;--h:80"></div>
+    <div class="btn-cover on-tint" aria-hidden="true" style="--x:843;--y:8378;--w:234;--h:80"></div>
     <!-- 클릭 시 Supabase zero_상담신청 테이블에 저장 (아래 스크립트) -->
     <button type="button" class="pbtn" id="btn-quote-submit" disabled aria-disabled="true" style="--cy:8417.5">견적 신청하기</button>
 
@@ -2391,6 +2392,29 @@
     font-size:26px; line-height:40px; cursor:pointer;
   }
   .yt-modal-close:hover{ background:rgba(255,255,255,.3); }
+
+  /* 견적문의 섹션 배경 (데스크톱) */
+  #card-links .quote-tint{
+    position:absolute; pointer-events:none;
+    left:calc(50% - 50vw); width:100vw;
+    top:calc(var(--t) * 7555); height:calc(var(--t) * 1124);
+    background:rgba(0,0,0,.02);
+  }
+  #card-links .form-cover,
+  #card-links .btn-cover.on-tint{ background:#FAFAFA; }
+  #card-links .agree,
+  #card-links .view-btn{ background:transparent; }
+
+  /* 견적문의 섹션 배경 (모바일·태블릿) */
+  @media (max-width:1023px){
+    #card-links > .quote-tint{ display:none !important; }
+    #m-quote-head,
+    #card-links{
+      background:#FAFAFA;
+      box-shadow:0 0 0 100vmax #FAFAFA;
+      clip-path:inset(0 -100vmax);
+    }
+  }
 </style>
 
 <div class="yt-modal" id="yt-modal" role="dialog" aria-modal="true" aria-label="서비스 소개 영상">
